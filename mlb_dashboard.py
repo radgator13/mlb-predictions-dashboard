@@ -12,10 +12,14 @@ st.title("⚾ MLB Game Predictions Dashboard")
 hit_df = pd.read_csv("predictions_today.csv")
 
 
-if os.path.exists("game_predictions.csv") and os.path.getsize("game_predictions.csv") > 0:
+if not os.path.exists("game_predictions.csv") or os.path.getsize("game_predictions.csv") == 0:
+    st.warning("⚠️ No game predictions file found or file is empty. Please update today's games.")
+    st.stop()
+
+try:
     game_df = pd.read_csv("game_predictions.csv")
-else:
-    st.warning("⚠️ No game predictions available. Try updating again or check data sources.")
+except pd.errors.EmptyDataError:
+    st.error("❌ 'game_predictions.csv' exists but contains no readable data. Try refreshing predictions.")
     st.stop()
 
 
