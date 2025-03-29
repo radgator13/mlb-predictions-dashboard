@@ -1,0 +1,7 @@
+streamlit
+pandas
+pybaseball
+scikit-learn
+tabulate
+
+# trigger rebuild
