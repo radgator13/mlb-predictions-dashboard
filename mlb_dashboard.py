@@ -52,12 +52,15 @@ filtered["Team Logo"] = filtered["Team"].apply(get_team_logo)
 st.subheader("?? Filtered Predictions")
 
 styled = filtered[['Name', 'Team', 'Team Logo', 'launch_speed', 'wRC+']].copy()
-styled['Logo'] = styled['Team Logo'].apply(lambda url: f"![logo]({url})")
+styled['Logo'] = styled['Team Logo'].apply(lambda url: f'<img src="{url}" width="40">')
+
 
 st.markdown(
-    styled[['Logo', 'Name', 'Team', 'launch_speed', 'wRC+']].to_markdown(index=False),
+    styled[['Logo', 'Name', 'Team', 'launch_speed', 'wRC+']].to_html(escape=False, index=False),
     unsafe_allow_html=True
 )
+
+
 
 # === TEAM BAR CHART ===
 st.subheader("??? Predicted Hits by Team")
