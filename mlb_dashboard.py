@@ -2,6 +2,7 @@
 import pandas as pd
 from Baseball_Scraper import get_todays_games
 from analyze_predictions import predict_game_outcomes
+import os
 
 # === CONFIG ===
 st.set_page_config(page_title="MLB Predictions", layout="wide")
@@ -9,7 +10,14 @@ st.title("⚾ MLB Game Predictions Dashboard")
 
 # === LOAD DATA ===
 hit_df = pd.read_csv("predictions_today.csv")
-game_df = pd.read_csv("game_predictions.csv")
+
+
+if os.path.exists("game_predictions.csv") and os.path.getsize("game_predictions.csv") > 0:
+    game_df = pd.read_csv("game_predictions.csv")
+else:
+    st.warning("⚠️ No game predictions available. Try updating again or check data sources.")
+    st.stop()
+
 
 # === PROCESS HITS DATA ===
 hits = hit_df[hit_df['predicted_hit'] == 1].copy()
