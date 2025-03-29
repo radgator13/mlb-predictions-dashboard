@@ -9,7 +9,7 @@ st.title("⚾ MLB Predicted Hitters Dashboard")
 df = pd.read_csv("predictions_today.csv")
 hits = df[df['predicted_hit'] == 1].copy()
 
-# === FORCE TEAM CODES TO UPPERCASE ===
+# === CLEAN & NORMALIZE TEAM CODES ===
 hits['Team'] = hits['Team'].astype(str).str.strip().str.upper()
 
 # === TEAM LOGO MAP ===
@@ -28,13 +28,18 @@ st.sidebar.header("🔍 Filter Results")
 teams = sorted(hits['Team'].dropna().unique())
 selected_team = st.sidebar.multiselect("Filter by Team", teams, default=teams)
 
+# 🛡️ Prevent empty filter case
+if not selected_team:
+    st.warning("Please select at least one team.")
+    st.stop()
+
 players = sorted(hits['Name'].dropna().unique())
 selected_players = st.sidebar.multiselect("Filter by Player", players)
 
 min_speed = st.sidebar.slider("Minimum Launch Speed", 60, 120, 100)
 min_wrc = st.sidebar.slider("Minimum wRC+", 0, 600, 100)
 
-# === DEBUG DISPLAY (Optional) ===
+# === DEBUG DISPLAY (Optional - can remove later) ===
 st.sidebar.caption("🧪 Debug Info")
 st.sidebar.write("Selected teams:", selected_team)
 st.sidebar.write("Teams in hits:", sorted(hits['Team'].unique().tolist()))
