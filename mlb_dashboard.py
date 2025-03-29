@@ -8,7 +8,8 @@ st.title("⚾ MLB Predicted Hitters Dashboard")
 # === LOAD DATA ===
 df = pd.read_csv("predictions_today.csv")
 hits = df[df['predicted_hit'] == 1].copy()
-hits['Team'] = hits['Team'].astype(str)  # Ensure consistency
+hits['Team'] = hits['Team'].astype(str).str.strip().str.upper()
+
 
 # === TEAM LOGO MAP ===
 TEAM_LOGO_MAP = {
