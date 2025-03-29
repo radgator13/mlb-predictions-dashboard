@@ -7,7 +7,8 @@ st.title("⚾ MLB Predicted Hitters Dashboard")
 
 # === LOAD DATA ===
 df = pd.read_csv("predictions_today.csv")
-hits = df[df['predicted_hit'] == 1]
+hits = df[df['predicted_hit'] == 1].copy()
+hits['Team'] = hits['Team'].astype(str)  # Ensure consistency
 
 # === TEAM LOGO MAP ===
 TEAM_LOGO_MAP = {
@@ -22,8 +23,6 @@ TEAM_LOGO_MAP = {
 # === SIDEBAR FILTERS ===
 st.sidebar.header("🔍 Filter Results")
 
-
-
 teams = sorted(hits['Team'].dropna().unique())
 selected_team = st.sidebar.multiselect("Filter by Team", teams, default=teams)
 
@@ -35,7 +34,7 @@ min_wrc = st.sidebar.slider("Minimum wRC+", 0, 600, 100)
 
 # === FILTERED DATA ===
 filtered = hits[
-    (hits['Team'].isin(selected_team)) &
+    hits['Team'].isin(selected_team) &
     (hits['Name'].isin(selected_players) if selected_players else True) &
     (hits['launch_speed'] >= min_speed) &
     (hits['wRC+'] >= min_wrc)
@@ -57,7 +56,7 @@ filtered["Headshot"] = filtered["Headshot URL"].apply(lambda url: f'<img src="{u
 st.subheader("🎯 Filtered Hit Predictions")
 
 styled = filtered[['Headshot', 'Name', 'Team', 'Logo', 'launch_speed', 'wRC+', 'AVG', 'OBP']]
-styled.columns = ['Player', 'Name', 'Team', 'Team', 'Launch Speed', 'wRC+', 'AVG', 'OBP']  # Clean headers
+styled.columns = ['Player', 'Name', 'Team', 'Team', 'Launch Speed', 'wRC+', 'AVG', 'OBP']
 
 st.markdown(
     styled.to_html(escape=False, index=False),
