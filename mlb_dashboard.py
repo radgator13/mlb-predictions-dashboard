@@ -8,8 +8,9 @@ st.title("⚾ MLB Predicted Hitters Dashboard")
 # === LOAD DATA ===
 df = pd.read_csv("predictions_today.csv")
 hits = df[df['predicted_hit'] == 1].copy()
-hits['Team'] = hits['Team'].astype(str).str.strip().str.upper()
 
+# === FORCE TEAM CODES TO UPPERCASE ===
+hits['Team'] = hits['Team'].astype(str).str.strip().str.upper()
 
 # === TEAM LOGO MAP ===
 TEAM_LOGO_MAP = {
@@ -32,6 +33,11 @@ selected_players = st.sidebar.multiselect("Filter by Player", players)
 
 min_speed = st.sidebar.slider("Minimum Launch Speed", 60, 120, 100)
 min_wrc = st.sidebar.slider("Minimum wRC+", 0, 600, 100)
+
+# === DEBUG DISPLAY (Optional) ===
+st.sidebar.caption("🧪 Debug Info")
+st.sidebar.write("Selected teams:", selected_team)
+st.sidebar.write("Teams in hits:", sorted(hits['Team'].unique().tolist()))
 
 # === FILTERED DATA ===
 filtered = hits[
