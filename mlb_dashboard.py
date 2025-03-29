@@ -8,8 +8,6 @@ st.title("⚾ MLB Predicted Hitters Dashboard")
 # === LOAD DATA ===
 df = pd.read_csv("predictions_today.csv")
 hits = df[df['predicted_hit'] == 1].copy()
-
-# === CLEAN & NORMALIZE TEAM CODES ===
 hits['Team'] = hits['Team'].astype(str).str.strip().str.upper()
 
 # === TEAM LOGO MAP ===
@@ -28,7 +26,6 @@ st.sidebar.header("🔍 Filter Results")
 teams = sorted(hits['Team'].dropna().unique())
 selected_team = st.sidebar.multiselect("Filter by Team", teams, default=teams)
 
-# 🛡️ Prevent empty filter case
 if not selected_team:
     st.warning("Please select at least one team.")
     st.stop()
@@ -38,11 +35,6 @@ selected_players = st.sidebar.multiselect("Filter by Player", players)
 
 min_speed = st.sidebar.slider("Minimum Launch Speed", 60, 120, 100)
 min_wrc = st.sidebar.slider("Minimum wRC+", 0, 600, 100)
-
-# === DEBUG DISPLAY (Optional - can remove later) ===
-st.sidebar.caption("🧪 Debug Info")
-st.sidebar.write("Selected teams:", selected_team)
-st.sidebar.write("Teams in hits:", sorted(hits['Team'].unique().tolist()))
 
 # === FILTERED DATA ===
 filtered = hits[
@@ -64,15 +56,36 @@ filtered["Headshot URL"] = filtered["batter"].apply(
 filtered["Logo"] = filtered["Team Logo"].apply(lambda url: f'<img src="{url}" width="40">')
 filtered["Headshot"] = filtered["Headshot URL"].apply(lambda url: f'<img src="{url}" width="50">')
 
+# === HOT HITTER TAGS ===
+def tag_hot_hitter(wrc):
+    if wrc >= 180:
+        return "🔥🔥 Hot"
+    elif wrc >= 130:
+        return "🔥 Warm"
+    elif wrc >= 100:
+        return "🌡️ Average"
+    else:
+        return "🧊 Cold"
+
+filtered["Status"] = filtered["wRC+"].apply(tag_hot_hitter)
+
 # === DISPLAY PLAYER TABLE ===
 st.subheader("🎯 Filtered Hit Predictions")
 
-styled = filtered[['Headshot', 'Name', 'Team', 'Logo', 'launch_speed', 'wRC+', 'AVG', 'OBP']]
-styled.columns = ['Player', 'Name', 'Team', 'Team', 'Launch Speed', 'wRC+', 'AVG', 'OBP']
+styled = filtered[['Headshot', 'Name', 'Status', 'Team', 'Logo', 'launch_speed', 'wRC+', 'AVG', 'OBP']]
+styled.columns = ['Player', 'Name', 'Status', 'Team', 'Team', 'Launch Speed', 'wRC+', 'AVG', 'OBP']
 
 st.markdown(
     styled.to_html(escape=False, index=False),
     unsafe_allow_html=True
+)
+
+# === EXPORT TO CSV BUTTON ===
+st.download_button(
+    label="📥 Export Filtered Results to CSV",
+    data=filtered.to_csv(index=False).encode('utf-8'),
+    file_name='filtered_predictions.csv',
+    mime='text/csv'
 )
 
 # === TEAM BAR CHART ===
