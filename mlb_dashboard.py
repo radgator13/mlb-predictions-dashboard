@@ -3,11 +3,14 @@ import pandas as pd
 
 # === CONFIG ===
 st.set_page_config(page_title="MLB Predictions", layout="wide")
-st.title("⚾ MLB Predicted Hitters Dashboard")
+st.title("⚾ MLB Game Predictions Dashboard")
 
 # === LOAD DATA ===
-df = pd.read_csv("predictions_today.csv")
-hits = df[df['predicted_hit'] == 1].copy()
+hit_df = pd.read_csv("predictions_today.csv")
+game_df = pd.read_csv("game_predictions.csv")
+
+# === PROCESS HITS DATA ===
+hits = hit_df[hit_df['predicted_hit'] == 1].copy()
 hits['Team'] = hits['Team'].astype(str).str.strip().str.upper()
 
 # === TEAM LOGO MAP ===
@@ -21,7 +24,7 @@ TEAM_LOGO_MAP = {
 }
 
 # === SIDEBAR FILTERS ===
-st.sidebar.header("🔍 Filter Results")
+st.sidebar.header("🔍 Filter Player Results")
 
 teams = sorted(hits['Team'].dropna().unique())
 selected_team = st.sidebar.multiselect("Filter by Team", teams, default=teams)
@@ -36,7 +39,7 @@ selected_players = st.sidebar.multiselect("Filter by Player", players)
 min_speed = st.sidebar.slider("Minimum Launch Speed", 60, 120, 100)
 min_wrc = st.sidebar.slider("Minimum wRC+", 0, 600, 100)
 
-# === FILTERED DATA ===
+# === FILTERED HITS DATA ===
 filtered = hits[
     hits['Team'].isin(selected_team) &
     (hits['Name'].isin(selected_players) if selected_players else True) &
@@ -69,7 +72,7 @@ def tag_hot_hitter(wrc):
 
 filtered["Status"] = filtered["wRC+"].apply(tag_hot_hitter)
 
-# === DISPLAY PLAYER TABLE ===
+# === DISPLAY HITS TABLE ===
 st.subheader("🎯 Filtered Hit Predictions")
 
 styled = filtered[['Headshot', 'Name', 'Status', 'Team', 'Logo', 'launch_speed', 'wRC+', 'AVG', 'OBP']]
@@ -80,20 +83,49 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# === EXPORT TO CSV BUTTON ===
 st.download_button(
-    label="📥 Export Filtered Results to CSV",
+    label="📥 Export Filtered Player Results to CSV",
     data=filtered.to_csv(index=False).encode('utf-8'),
     file_name='filtered_predictions.csv',
     mime='text/csv'
 )
 
-# === TEAM BAR CHART ===
 st.subheader("🏟️ Predicted Hits by Team")
 team_chart = filtered.groupby("Team")['predicted_hit'].count().sort_values(ascending=False)
 st.bar_chart(team_chart)
 
-# === TOP HITTERS BY wRC+ ===
 st.subheader("🔥 Top Hitters by wRC+")
 top_wrc = filtered.sort_values(by="wRC+", ascending=False).head(10)
 st.dataframe(top_wrc[['Name', 'Team', 'wRC+', 'AVG', 'OBP']])
+
+# === GAME PREDICTIONS SECTION ===
+st.subheader("🎲 Predicted Game Outcomes")
+
+st.sidebar.header("📊 Filter Game Predictions")
+dates = sorted(game_df['Date'].unique())
+selected_date = st.sidebar.selectbox("Select Date", dates, index=len(dates)-1)
+selected_game_teams = st.sidebar.multiselect(
+    "Filter by Team",
+    sorted(set(game_df['Home Team'].unique()).union(set(game_df['Away Team'].unique())))
+)
+
+games_filtered = game_df[game_df['Date'] == selected_date].copy()
+if selected_game_teams:
+    games_filtered = games_filtered[
+        games_filtered['Home Team'].isin(selected_game_teams) |
+        games_filtered['Away Team'].isin(selected_game_teams)
+    ]
+
+games_filtered['Winner'] = games_filtered['Predicted Winner'].apply(lambda x: f"✅ {x}")
+games_filtered['Total Runs'] = games_filtered['Predicted Total Runs']
+
+st.dataframe(
+    games_filtered[['Home Team', 'Away Team', 'Home Win Prob', 'Away Win Prob', 'Winner', 'Total Runs']]
+)
+
+st.download_button(
+    label="📥 Export Game Predictions to CSV",
+    data=games_filtered.to_csv(index=False).encode('utf-8'),
+    file_name='game_predictions.csv',
+    mime='text/csv'
+)
