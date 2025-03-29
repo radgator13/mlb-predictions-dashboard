@@ -1,23 +1,35 @@
-import pandas as pd
+﻿import pandas as pd
+import joblib
+import numpy as np
 
-# Load your predictions file
-df = pd.read_csv("predictions_today.csv")
+def predict_game_outcomes(df):
+    # Load your trained prediction model
+    model = joblib.load('trained_model.pkl')
 
-# Basic summary
-print(f"\n?? Total rows: {len(df)}")
-print(f"? Predictions made: {df['predicted_hit'].value_counts().to_dict()}")
+    predictions = []
+    for _, row in df.iterrows():
+        home_team, away_team = row['Home Team'], row['Away Team']
+        
+        # Placeholder logic: Replace this with your real feature extraction!
+        features = np.random.rand(1, 10)
 
-# === Top Hitters by Launch Speed (Predicted Hit Only) ===
-top_speed = df[df['predicted_hit'] == 1].sort_values(by='launch_speed', ascending=False).head(10)
-print("\n?? Top Predicted Hitters by Launch Speed:")
-print(top_speed[['Name', 'Team', 'launch_speed', 'wRC+']])
+        predicted_scores = model.predict(features)
+        home_score, away_score = predicted_scores[0]
 
-# === Top Hitters by wRC+ (Predicted Hit Only) ===
-top_wrc = df[df['predicted_hit'] == 1].sort_values(by='wRC+', ascending=False).head(10)
-print("\n?? Top Predicted Hitters by wRC+:")
-print(top_wrc[['Name', 'Team', 'wRC+', 'AVG']])
+        winner = home_team if home_score >= away_score else away_team
+        predictions.append({
+            'Date': row['Date'],
+            'Home Team': home_team,
+            'Away Team': away_team,
+            'Home Predicted Score': round(home_score, 1),
+            'Away Predicted Score': round(away_score, 1),
+            'Home Win Prob': round(np.random.uniform(0.5, 0.8), 2),
+            'Away Win Prob': round(np.random.uniform(0.2, 0.5), 2),
+            'Predicted Winner': winner,
+            'Predicted Total Runs': round(home_score + away_score, 1)
+        })
 
-# === Predicted Hits Per Team ===
-team_hits = df[df['predicted_hit'] == 1].groupby('Team')['predicted_hit'].count().sort_values(ascending=False)
-print("\n??? Predicted Hits by Team:")
-print(team_hits.head(10))
+    predictions_df = pd.DataFrame(predictions)
+    predictions_df.to_csv("game_predictions.csv", index=False)
+    print("✅ Game predictions saved to game_predictions.csv")
+    return predictions_df
