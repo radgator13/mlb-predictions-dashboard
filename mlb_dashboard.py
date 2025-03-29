@@ -19,7 +19,7 @@ TEAM_LOGO_MAP = {
     'TBR': 'tb', 'TEX': 'tex', 'TOR': 'tor', 'WSN': 'wsh'
 }
 
-# === FILTER SIDEBAR ===
+# === SIDEBAR FILTERS ===
 st.sidebar.header("?? Filter Results")
 
 teams = sorted(hits['Team'].dropna().unique())
@@ -37,30 +37,30 @@ filtered = hits[
     (hits['Name'].isin(selected_players) if selected_players else True) &
     (hits['launch_speed'] >= min_speed) &
     (hits['wRC+'] >= min_wrc)
-]
+].copy()
 
-# === ADD LOGO URL COLUMN ===
+# === ADD LOGOS AND HEADSHOTS ===
 def get_team_logo(team_abbr):
     code = TEAM_LOGO_MAP.get(team_abbr)
-    if code:
-        return f"https://a.espncdn.com/i/teamlogos/mlb/500/{code}.png"
-    return ""
+    return f"https://a.espncdn.com/i/teamlogos/mlb/500/{code}.png" if code else ""
 
 filtered["Team Logo"] = filtered["Team"].apply(get_team_logo)
+filtered["Headshot URL"] = filtered["batter"].apply(
+    lambda x: f"https://img.mlbstatic.com/mlb-photos/image/upload/v1/people/{x}/headshot/67/current.png"
+)
+filtered["Logo"] = filtered["Team Logo"].apply(lambda url: f'<img src="{url}" width="40">')
+filtered["Headshot"] = filtered["Headshot URL"].apply(lambda url: f'<img src="{url}" width="50">')
 
-# === DISPLAY FILTERED TABLE WITH LOGOS ===
-st.subheader("?? Filtered Predictions")
+# === DISPLAY PLAYER TABLE ===
+st.subheader("?? Filtered Hit Predictions")
 
-styled = filtered[['Name', 'Team', 'Team Logo', 'launch_speed', 'wRC+']].copy()
-styled['Logo'] = styled['Team Logo'].apply(lambda url: f'<img src="{url}" width="40">')
-
+styled = filtered[['Headshot', 'Name', 'Team', 'Logo', 'launch_speed', 'wRC+', 'AVG', 'OBP']]
+styled.columns = ['Player', 'Name', 'Team', 'Team', 'Launch Speed', 'wRC+', 'AVG', 'OBP']  # Clean headers
 
 st.markdown(
-    styled[['Logo', 'Name', 'Team', 'launch_speed', 'wRC+']].to_html(escape=False, index=False),
+    styled.to_html(escape=False, index=False),
     unsafe_allow_html=True
 )
-
-
 
 # === TEAM BAR CHART ===
 st.subheader("??? Predicted Hits by Team")
