@@ -1,9 +1,9 @@
-import streamlit as st
+﻿import streamlit as st
 import pandas as pd
 
 # === CONFIG ===
 st.set_page_config(page_title="MLB Predictions", layout="wide")
-st.title("? MLB Predicted Hitters Dashboard")
+st.title("⚾ MLB Predicted Hitters Dashboard")
 
 # === LOAD DATA ===
 df = pd.read_csv("predictions_today.csv")
@@ -20,7 +20,9 @@ TEAM_LOGO_MAP = {
 }
 
 # === SIDEBAR FILTERS ===
-st.sidebar.header("?? Filter Results")
+st.sidebar.header("🔍 Filter Results")
+
+
 
 teams = sorted(hits['Team'].dropna().unique())
 selected_team = st.sidebar.multiselect("Filter by Team", teams, default=teams)
@@ -52,7 +54,7 @@ filtered["Logo"] = filtered["Team Logo"].apply(lambda url: f'<img src="{url}" wi
 filtered["Headshot"] = filtered["Headshot URL"].apply(lambda url: f'<img src="{url}" width="50">')
 
 # === DISPLAY PLAYER TABLE ===
-st.subheader("?? Filtered Hit Predictions")
+st.subheader("🎯 Filtered Hit Predictions")
 
 styled = filtered[['Headshot', 'Name', 'Team', 'Logo', 'launch_speed', 'wRC+', 'AVG', 'OBP']]
 styled.columns = ['Player', 'Name', 'Team', 'Team', 'Launch Speed', 'wRC+', 'AVG', 'OBP']  # Clean headers
@@ -63,11 +65,11 @@ st.markdown(
 )
 
 # === TEAM BAR CHART ===
-st.subheader("??? Predicted Hits by Team")
+st.subheader("🏟️ Predicted Hits by Team")
 team_chart = filtered.groupby("Team")['predicted_hit'].count().sort_values(ascending=False)
 st.bar_chart(team_chart)
 
 # === TOP HITTERS BY wRC+ ===
-st.subheader("?? Top Hitters by wRC+")
+st.subheader("🔥 Top Hitters by wRC+")
 top_wrc = filtered.sort_values(by="wRC+", ascending=False).head(10)
 st.dataframe(top_wrc[['Name', 'Team', 'wRC+', 'AVG', 'OBP']])
